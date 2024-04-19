@@ -1,52 +1,81 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-//Створіть клас Matrix, який представляє цілочисельну матрицю. В цьому класі створіть:
-//Зубчастий двовимірний масив цілих чисел.
-//Індексатор для доступу до елементів матриці за допомогою індексів row та column.
-
-//Напишіть метод FillMatrixRandom(int rows, int columns, int min, int max), який заповнює матрицю випадковими числами в діапазоні від min до max.
-//Створіть об'єкт класу Matrix, заповніть його випадковими значеннями та виведіть матрицю на консоль. Потім, за допомогою індексатора, знайдіть та виведіть значення певного елемента матриці.
-
-namespace Module
+interface ITransaction
 {
+    void ExecuteTransaction();
+    bool CheckTransactionStatus();
+}
 
-    class Matrix
+class FinancialTransaction : ITransaction
+{
+    public double Amount { get; set; }
+    public DateTime TransactionDate { get; set; }
+    public bool TransactionStatus { get; set; }
+
+    public FinancialTransaction(double amount, DateTime date, bool status)
     {
-
-        private int[][] _Matrix { set; get; }
-
-
-        public Matrix(int[][] matrix) 
-        { 
-            for (int j = 0;j < matrix.Length; j++)
-            {
-                for(int i = 0; i < matrix.Length; i++)
-                {
-                    _Matrix[i] = matrix[i];
-                }
-                _Matrix[j] = matrix[j];
-            }
-        }
-
-        public override string ToString()
-        {
-            return $"Matrix {_Matrix}";
-        }
+        Amount = amount;
+        TransactionDate = date;
+        TransactionStatus = status;
     }
 
+    public void ExecuteTransaction()
+    {   
+        this.TransactionStatus = true;
+    }
 
-    class Program
+    public bool CheckTransactionStatus() => TransactionStatus;
+
+    public override string ToString()
     {
-        static void Main(string[] args)
-        {
-            Matrix matrix = new Matrix();
+        return $"Amount: {Amount}\nTransactionDate: {TransactionDate}\nStatus: {TransactionStatus}\n";
+    }
+}
 
-            Console.WriteLine(matrix.ToString());
+class Transaction
+{
+    public double Amount { get; set; }
+    public DateTime TransactionDate { get; set; }
 
-        }
+    public Transaction(double amount, DateTime transactionDate)
+    {
+        Amount = amount;
+        TransactionDate = transactionDate;
+    }
+
+    public void Deposit(double dep)
+    {
+        Amount = Amount + dep;
+    }
+
+    public void Withdraw(double withd)
+    {
+        Amount = Amount - withd;
+    }
+
+    public override string ToString()
+    {
+        return $"Amount: {Amount}\nTransactionDate: {TransactionDate}\n";
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        FinancialTransaction fin = new FinancialTransaction(24, DateTime.Now, true);
+        Console.WriteLine(fin);
+
+        FinancialTransaction fin1 = new FinancialTransaction(500, DateTime.Today, true);
+        Console.WriteLine(fin1);
+
+        Transaction fin2 = new Transaction(53, DateTime.Now);
+        Console.WriteLine(fin2);
+        Console.WriteLine("Depositing +55");
+        fin2.Deposit(55);
+        Console.WriteLine(fin2);
+        Console.WriteLine("Withdrawing -100");
+        fin2.Withdraw(100);
+        Console.WriteLine(fin2);
     }
 }
