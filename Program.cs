@@ -1,81 +1,79 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
+using System.IO;
 
-interface ITransaction
+struct Employee
 {
-    void ExecuteTransaction();
-    bool CheckTransactionStatus();
-}
+    public string Name { get; set; }
+    public string Position { get; set; }
+    public DateTime HireDate { get; set; }
 
-class FinancialTransaction : ITransaction
-{
-    public double Amount { get; set; }
-    public DateTime TransactionDate { get; set; }
-    public bool TransactionStatus { get; set; }
-
-    public FinancialTransaction(double amount, DateTime date, bool status)
+    Employee(string name, string position, DateTime hireDate)
     {
-        Amount = amount;
-        TransactionDate = date;
-        TransactionStatus = status;
-    }
-
-    public void ExecuteTransaction()
-    {   
-        this.TransactionStatus = true;
-    }
-
-    public bool CheckTransactionStatus() => TransactionStatus;
-
-    public override string ToString()
-    {
-        return $"Amount: {Amount}\nTransactionDate: {TransactionDate}\nStatus: {TransactionStatus}\n";
-    }
-}
-
-class Transaction
-{
-    public double Amount { get; set; }
-    public DateTime TransactionDate { get; set; }
-
-    public Transaction(double amount, DateTime transactionDate)
-    {
-        Amount = amount;
-        TransactionDate = transactionDate;
-    }
-
-    public void Deposit(double dep)
-    {
-        Amount = Amount + dep;
-    }
-
-    public void Withdraw(double withd)
-    {
-        Amount = Amount - withd;
-    }
-
-    public override string ToString()
-    {
-        return $"Amount: {Amount}\nTransactionDate: {TransactionDate}\n";
+        Name = name;
+        Position = position; 
+        HireDate = hireDate;
     }
 }
 
 class Program
 {
-    static void Main(string[] args)
+    static List<Employee> ReadEmployeesFromXml(string filePath)
     {
-        FinancialTransaction fin = new FinancialTransaction(24, DateTime.Now, true);
-        Console.WriteLine(fin);
+        XDocument doc = XDocument.Load(filePath);
+        return doc.Descendants("Employee")
+                  .Select(x => new Employee
+                  {
+                      Name = x.Element("Name")?.Value,
+                      Position = x.Element("Position")?.Value,
+                      HireDate = DateTime.Parse(x.Element("HireDate")?.Value)
+                  })
+                  .ToList();
+    }
 
-        FinancialTransaction fin1 = new FinancialTransaction(500, DateTime.Today, true);
-        Console.WriteLine(fin1);
+    static void WriteEmployeesToXml(List<Employee> employees, string filePath)
+    {
+        XDocument doc = new XDocument(
+            new XElement("Employees",
+                employees.Select(e =>
+                    new XElement("Employee",
+                        new XElement("Name", e.Name),
+                        new XElement("Position", e.Position),
+                        new XElement("HireDate", e.HireDate.ToString("yyyy-MM-dd"))
+                    )
+                )
+            )
+        );
+        doc.Save(filePath);
+    }
 
-        Transaction fin2 = new Transaction(53, DateTime.Now);
-        Console.WriteLine(fin2);
-        Console.WriteLine("Depositing +55");
-        fin2.Deposit(55);
-        Console.WriteLine(fin2);
-        Console.WriteLine("Withdrawing -100");
-        fin2.Withdraw(100);
-        Console.WriteLine(fin2);
+    static void WriteEmployeesToText(List<Employee> employees, string filePath)
+    {
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            foreach (var employee in employees)
+            {
+                writer.WriteLine($"Name: {employee.Name} Position: {employee.Position} HireDate: {employee.HireDate:yyyy-MM-dd}");
+            }
+        } 
+    }
+
+    static void Main()
+    {
+        string inputFilePath = "employees.xml";
+        string outputXmlFilePath = "sorted_employees.xml";
+        string outputTextFilePath = "employees.txt";
+
+        List<Employee> employees = ReadEmployeesFromXml(inputFilePath);
+
+        var sortedEmployees = employees.OrderBy(e => e.HireDate).ToList();
+
+        WriteEmployeesToXml(sortedEmployees, outputXmlFilePath);
+
+        WriteEmployeesToText(sortedEmployees, outputTextFilePath);
+
+        Console.WriteLine("Successfully !");
     }
 }
